@@ -8,6 +8,9 @@ on:
     branches: [main, master]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   api-tests:
     name: Run API Tests
@@ -36,7 +39,7 @@ jobs:
       - name: Run Cucumber API tests
         run: npm test
 
-      - name: Upload Cucumber HTML report
+      - name: Upload HTML report artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -44,3 +47,44 @@ jobs:
           path: reports/cucumber-report.html
           if-no-files-found: warn
           retention-days: 14
+
+  deploy-report:
+    name: Publish HTML Report
+    needs: api-tests
+    if: always() && github.event_name != 'pull_request' && contains(fromJSON('["main","master"]'), github.ref_name)
+    runs-on: ubuntu-latest
+
+    permissions:
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Download HTML report
+        uses: actions/download-artifact@v4
+        with:
+          name: cucumber-api-test-report
+          path: public
+
+      - name: Prepare report website
+        run: |
+          if [ ! -f public/cucumber-report.html ]; then
+            echo "HTML report was not generated."
+            exit 1
+          fi
+          cp public/cucumber-report.html public/index.html
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: public
+
+      - name: Deploy report
+        id: deployment
+        uses: actions/deploy-pages@v4
