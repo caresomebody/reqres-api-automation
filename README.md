@@ -315,7 +315,8 @@ It demonstrates:
 
 ---
 
-**Author:** Ali Naufal Ammarullah  / alinaufal00@gmail.com
+**Author:** Ali Naufal Ammarullah (alinaufal00@gmail.com)
+
 **Project:** ReqRes API Automation  
 **Language:** JavaScript  
 **Framework:** Cucumber.js + Playwright  
